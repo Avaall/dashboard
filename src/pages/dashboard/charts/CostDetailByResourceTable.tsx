@@ -1,21 +1,19 @@
 import { Box, Typography, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@mui/material';
-
-interface Row {
-  resource: string;
-  cost: number;
-}
+import { apiService } from '../../../services/api';
+import { usePaginatedData } from '../../../hooks/usePaginatedData';
+import LoadingErrorWrapper from '../../../components/LoadingErrorWrapper';
+import Pagination from '../../../components/Pagination';
 
 const CostDetailByResourceTable = () => {
-  const rows: Row[] = [
-    { resource: 'EC2 Instance', cost: 1200 },
-    { resource: 'S3 Bucket', cost: 800 },
-    { resource: 'RDS Instance', cost: 1000 },
-  ];
+  const { data, loading, error, pagination, currentPage, goToPage } = usePaginatedData(
+    (page, limit) => apiService.getCostDetailByResource(page, limit),
+    10
+  );
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <Tooltip
-        title="Este reporte muestra los costos distribuidos por tipo de recurso, como instancias de cómputo, almacenamiento o bases de datos. Una tabla es adecuada cuando se requiere inspección detallada de cada línea de gasto."
+        title="Esta tabla muestra el detalle de costos por recurso individual. Es útil para identificar los recursos más costosos y tomar decisiones de optimización específicas."
         placement="top"
         arrow
       >
@@ -23,23 +21,37 @@ const CostDetailByResourceTable = () => {
           Detalle de Costos por Recurso
         </Typography>
       </Tooltip>
-      <Box width="100%" maxWidth={600}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Resource</TableCell>
-              <TableCell>Cost ($)</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row: Row, idx: number) => (
-              <TableRow key={idx + '_rowCostDetailByResourceTable'}>
-                <TableCell>{row.resource}</TableCell>
-                <TableCell>{row.cost}</TableCell>
+      <Box width="100%" maxWidth={800}>
+        <LoadingErrorWrapper loading={loading} error={error}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Recurso</strong></TableCell>
+                <TableCell><strong>Tipo</strong></TableCell>
+                <TableCell align="right"><strong>Costo ($)</strong></TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {data?.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell>{row.resource}</TableCell>
+                  <TableCell>{row.type}</TableCell>
+                  <TableCell align="right">${row.cost.toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </LoadingErrorWrapper>
+        
+        {pagination && !loading && !error && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={pagination.totalPages}
+            total={pagination.total}
+            limit={pagination.limit}
+            onPageChange={goToPage}
+          />
+        )}
       </Box>
     </Box>
   );

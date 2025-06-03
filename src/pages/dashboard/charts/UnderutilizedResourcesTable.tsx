@@ -1,45 +1,45 @@
-import { Table, TableBody, TableCell, TableHead, TableRow, Box, Typography, Tooltip } from '@mui/material';
-
-interface Row {
-  resource: string;
-  usage: string;
-}
+import { Box, Typography, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@mui/material';
+import { apiService } from '../../../services/api';
+import { useApiData } from '../../../hooks/useApiData';
+import LoadingErrorWrapper from '../../../components/LoadingErrorWrapper';
 
 const UnderutilizedResourcesTable = () => {
-  const rows: Row[] = [
-    { resource: 'VM-001', usage: '15%' },
-    { resource: 'DB-002', usage: '22%' },
-    { resource: 'Storage-003', usage: '18%' },
-  ];
+  const { data, loading, error } = useApiData(() => apiService.getUnderutilizedResources());
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <Tooltip
-        title="Muestra los recursos con menor utilización en porcentaje. Este caso de uso permite detectar ineficiencias que pueden representar oportunidades de ahorro. Una tabla es adecuada si la cantidad es pequeña; para listas más largas, un gráfico de barras es preferible."
+        title="Esta tabla identifica recursos que están siendo subutilizados (alto costo, bajo uso). Es crucial para identificar oportunidades de optimización y reducción de costos."
         placement="top"
         arrow
       >
         <Typography variant="h6" gutterBottom sx={{ cursor: 'help' }}>
-          Recursos Infrautilizados
+          Recursos Subutilizados
         </Typography>
       </Tooltip>
-      <Box width="100%" maxWidth={600}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Resource</TableCell>
-              <TableCell>Usage</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row: Row, idx: number) => (
-              <TableRow key={idx + '_rowUnderutilizedResourcesTable'}>
-                <TableCell>{row.resource}</TableCell>
-                <TableCell>{row.usage}</TableCell>
+      <Box width="100%" maxWidth={800}>
+        <LoadingErrorWrapper loading={loading} error={error}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Recurso</strong></TableCell>
+                <TableCell><strong>Tipo</strong></TableCell>
+                <TableCell align="right"><strong>Costo ($)</strong></TableCell>
+                <TableCell align="right"><strong>Uso (%)</strong></TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {data?.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell>{row.resource}</TableCell>
+                  <TableCell>{row.type}</TableCell>
+                  <TableCell align="right">${row.cost.toLocaleString()}</TableCell>
+                  <TableCell align="right">{row.usage?.toFixed(1)}%</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </LoadingErrorWrapper>
       </Box>
     </Box>
   );

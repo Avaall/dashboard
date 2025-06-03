@@ -1,17 +1,50 @@
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { Box, Typography, Tooltip } from '@mui/material';
+import { apiService } from '../../../services/api';
+import { useApiData } from '../../../hooks/useApiData';
+import LoadingErrorWrapper from '../../../components/LoadingErrorWrapper';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, ChartTooltip, Legend);
 
 const ProviderCostComparisonChart = () => {
-  const data = {
-    labels: ['AWS', 'Azure', 'GCP'],
+  const { data, loading, error } = useApiData(() => apiService.getProviderCostComparison());
+
+  const chartData = {
+    labels: data?.labels || [],
     datasets: [{
-      label: 'Cost ($)',
-      data: [4000, 3200, 2800],
-      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+      label: 'Costo ($)',
+      data: data?.data || [],
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+      borderColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+      borderWidth: 1
     }]
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value: any) {
+            return '$' + value.toLocaleString();
+          }
+        }
+      }
+    }
   };
 
   return (
@@ -26,7 +59,9 @@ const ProviderCostComparisonChart = () => {
         </Typography>
       </Tooltip>
       <Box width="100%" maxWidth={600}>
-        <Bar data={data} />
+        <LoadingErrorWrapper loading={loading} error={error}>
+          <Bar data={chartData} options={options} />
+        </LoadingErrorWrapper>
       </Box>
     </Box>
   );

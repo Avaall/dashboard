@@ -1,18 +1,51 @@
 import { Box, Typography, Tooltip } from '@mui/material';
 import { Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { apiService } from '../../../services/api';
+import { useApiData } from '../../../hooks/useApiData';
+import LoadingErrorWrapper from '../../../components/LoadingErrorWrapper';
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, ChartTooltip, Legend);
 
 const MonthlyUsageTrendChart = () => {
-  const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+  const { data, loading, error } = useApiData(() => apiService.getMonthlyUsageTrend());
+
+  const chartData = {
+    labels: data?.labels || [],
     datasets: [{
-      label: 'Usage (GB)',
-      data: [500, 600, 700, 650, 800],
+      label: 'Uso (GB)',
+      data: data?.data || [],
       borderColor: 'rgba(54, 162, 235, 0.8)',
-      fill: false
+      backgroundColor: 'rgba(54, 162, 235, 0.2)',
+      fill: false,
+      tension: 0.1
     }]
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} GB`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value: any) {
+            return value.toLocaleString() + ' GB';
+          }
+        }
+      }
+    }
   };
 
   return (
@@ -27,7 +60,9 @@ const MonthlyUsageTrendChart = () => {
         </Typography>
       </Tooltip>
       <Box width="100%" maxWidth={600}>
-        <Line data={data} />
+        <LoadingErrorWrapper loading={loading} error={error}>
+          <Line data={chartData} options={options} />
+        </LoadingErrorWrapper>
       </Box>
     </Box>
   );

@@ -1,44 +1,43 @@
-import { Table, TableBody, TableCell, TableHead, TableRow, Box, Typography, Tooltip } from '@mui/material';
-
-interface Row {
-  type: string;
-  savings: number;
-}
+import { Box, Typography, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@mui/material';
+import { apiService } from '../../../services/api';
+import { useApiData } from '../../../hooks/useApiData';
+import LoadingErrorWrapper from '../../../components/LoadingErrorWrapper';
 
 const DiscountAnalysisTable = () => {
-  const rows: Row[] = [
-    { type: 'Reserved Instance', savings: 400 },
-    { type: 'Savings Plan', savings: 350 },
-  ];
+  const { data, loading, error } = useApiData(() => apiService.getDiscountAnalysis());
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center">
       <Tooltip
-        title="Muestra los ahorros obtenidos mediante descuentos aplicados como Instancias Reservadas o Planes de Ahorro. Una tabla permite comparar los tipos de descuentos y cuantificar su impacto."
+        title="Esta tabla muestra el análisis de descuentos aplicados, como instancias reservadas, planes de ahorro, etc. Es útil para evaluar la efectividad de las estrategias de optimización de costos."
         placement="top"
         arrow
       >
         <Typography variant="h6" gutterBottom sx={{ cursor: 'help' }}>
-          Análisis de Descuentos Aplicados
+          Análisis de Descuentos
         </Typography>
       </Tooltip>
-      <Box width="100%" maxWidth={600}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Discount Type</TableCell>
-              <TableCell>Savings ($)</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row: Row, idx: number) => (
-              <TableRow key={idx + '_rowDiscountAnalysisTable'}>
-                <TableCell>{row.type}</TableCell>
-                <TableCell>{row.savings}</TableCell>
+      <Box width="100%" maxWidth={800}>
+        <LoadingErrorWrapper loading={loading} error={error}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Tipo de Descuento</strong></TableCell>
+                <TableCell><strong>Nombre</strong></TableCell>
+                <TableCell align="right"><strong>Ahorro ($)</strong></TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {data?.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell>{row.discountType}</TableCell>
+                  <TableCell>{row.discountName}</TableCell>
+                  <TableCell align="right">${row.savings.toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </LoadingErrorWrapper>
       </Box>
     </Box>
   );
