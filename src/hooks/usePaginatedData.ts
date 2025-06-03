@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ApiException, PaginatedResponse } from '../services/api';
+import { ApiException } from '../services/api';
+import type { PaginatedResponse } from '../services/api';
 
 // Estado genérico para datos paginados
 interface PaginatedState<T> {
